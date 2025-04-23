@@ -51,7 +51,7 @@ def spielplan_aufbereiten(df):
     if "Datum" in df.columns:
         valid_dates = df["Datum"].notna()
 
-        df.loc[valid_dates, "Wochentag"] = df.loc[valid_dates, "Datum"].dt.day_name(locale="de_DE")
+        df.loc[valid_dates, "Wochentag"] = df.loc[valid_dates, "Datum"].dt.day_name()
         df.loc[valid_dates, "Wochenende"] = df.loc[valid_dates, "Datum"].dt.weekday >= 5
         df.loc[valid_dates, "Spieltagstyp"] = df.loc[valid_dates, "Wochenende"].apply(
             lambda x: "Wochenende" if x else "Wochentag"
