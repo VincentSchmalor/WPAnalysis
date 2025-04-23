@@ -2,6 +2,7 @@
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
+import data_operator
 
 def daten_laden():
     URL = "https://dsvdaten.dsv.de/Modules/WB/League.aspx?Season=2024&LeagueID=77&Group=&LeagueKind=L&StateID=17"
@@ -57,3 +58,13 @@ def tabelle_laden(soup):
         })
 
     return pd.DataFrame(results)
+
+# Funktion zum Laden und Verarbeiten der Daten
+def lade_und_verarbeite_daten():
+    soup = daten_laden()
+    df_spielplan = spielplan_laden(soup)
+    df_spielplan = data_operator.spielplan_aufbereiten(df_spielplan)
+    teamplaene = data_operator.teamplaene_erstellen(df_spielplan)
+    df_teams = data_operator.teamstatistiken_erstellen(teamplaene)
+    df_tabelle = tabelle_laden(soup)
+    return df_spielplan, teamplaene, df_teams, df_tabelle
