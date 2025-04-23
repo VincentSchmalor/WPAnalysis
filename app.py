@@ -152,5 +152,4 @@ def aktualisiere_daten(n_clicks):
     return f"Letzte Aktualisierung: {letzte_aktualisierung.strftime('%d.%m.%Y %H:%M:%S')}"
 
 if __name__ == "__main__":
-    #app.run(host="0.0.0.0", port=8050, debug=True)
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=8050, debug=True)
