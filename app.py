@@ -1,4 +1,4 @@
-from dash import Dash, html, dash_table, dcc, Input, Output, no_update
+from dash import Dash, html, dash_table, dcc, Input, Output, no_update, callback_context
 import dash_mantine_components as dmc
 import pandas as pd
 import datetime
@@ -142,13 +142,21 @@ def update_dashboard(team):
 
 @app.callback(
     Output("update-info", "children"),
-    Input("update-button", "n_clicks"),
-    prevent_initial_call=True
+    [Input("update-button", "n_clicks"),
+     Input("update-info", "id")]
 )
-def aktualisiere_daten(n_clicks):
+def update_info(n_clicks, _):
     global df_spielplan, teamplaene, df_teams, df_tabelle, letzte_aktualisierung
-    df_spielplan, teamplaene, df_teams, df_tabelle = data_loader.lade_und_verarbeite_daten()
-    letzte_aktualisierung = datetime.datetime.now()
+    ctx = callback_context
+    if not ctx.triggered:
+        # Initial call, just show timestamp
+        return f"Letzte Aktualisierung: {letzte_aktualisierung.strftime('%d.%m.%Y %H:%M:%S')}"
+    trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
+    if trigger_id == "update-button":
+        df_spielplan, teamplaene, df_teams, df_tabelle = data_loader.lade_und_verarbeite_daten()
+        letzte_aktualisierung = datetime.datetime.now()
+        return f"Letzte Aktualisierung: {letzte_aktualisierung.strftime('%d.%m.%Y %H:%M:%S')}"
+    # Otherwise, just return the current timestamp
     return f"Letzte Aktualisierung: {letzte_aktualisierung.strftime('%d.%m.%Y %H:%M:%S')}"
 
 if __name__ == "__main__":
