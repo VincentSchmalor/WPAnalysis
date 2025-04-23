@@ -1,0 +1,6 @@
+dash
+dash-mantine-components
+pandas
+numpy
+requests
+beautifulsoup4
