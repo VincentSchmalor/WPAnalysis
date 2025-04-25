@@ -9,7 +9,7 @@ import data.data_handler as data_handler
 df_game_plan, df_team_plans, df_team_stats, df_score_board = data_handler.get_second_league()
 last_update = datetime.datetime.now()
 
-app = Dash(__name__, external_stylesheets=["https://unpkg.com/@mantine/core@6.0.4/styles.css"])
+app = Dash(__name__, external_stylesheets=["https://cdn.jsdelivr.net/npm/@mantine/core@7.17.5/styles.css"])
 
 app.layout = dmc.MantineProvider(
     children=[
@@ -157,7 +157,7 @@ def update_info(n_clicks, _):
         return f"Letzte Aktualisierung: {last_update.strftime('%d.%m.%Y %H:%M:%S')}"
     trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
     if trigger_id == "update-button":
-        df_game_plan, df_team_plans, df_team_stats, df_tabelle = data_handler.lade_und_verarbeite_daten()
+        df_game_plan, df_team_plans, df_team_stats, df_tabelle = data_handler.get_second_league()
         last_update = datetime.datetime.now()
         return f"Letzte Aktualisierung: {last_update.strftime('%d.%m.%Y %H:%M:%S')}"
     # Otherwise, just return the current timestamp
