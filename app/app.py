@@ -201,7 +201,7 @@ def update_dashboard(team):
         y=df_score_board["Tordifferenz"],
         mode="markers+text",
         text=df_score_board["Tordifferenz"],
-        textposition="middle right",
+        textposition="top center",
         marker=dict(symbol="line-ew-open", size=20, color="black"),
         name="Tordifferenz"
     ))
