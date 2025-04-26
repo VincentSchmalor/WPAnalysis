@@ -169,7 +169,11 @@ def update_dashboard(team):
             "Offen": "#6c757d"         # Grau
         }
     )
-    fig.update_layout(xaxis_title="Team", yaxis_title="Anzahl Spiele", legend_title="Ergebnis")
+    fig.update_layout(
+    xaxis_title=None,
+    yaxis_title=None,
+    legend=dict(visible=False)
+    )
 
     return table_style_data, table_format, games_data, game_plan_style_data, fig
 
