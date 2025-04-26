@@ -158,7 +158,7 @@ def update_dashboard(team):
 
     # Stacked Games Chart
     fig_stacked_games = go.Figure()
-    for outcome, color in zip(["Siege", "Niederlagen", "Offen"], ["#28a745", "#dc3545", "#6c757d"]):
+    for outcome, color in zip(["Niederlagen", "Siege", "Offen"], ["#dc3545", "#28a745", "#6c757d"]):
         fig_stacked_games.add_trace(
             go.Bar(
                 x=df_score_board["Team"],
@@ -202,13 +202,13 @@ def update_dashboard(team):
         mode="markers+text",
         text=df_score_board["Tordifferenz"],
         textposition="top center",
-        marker=dict(symbol="line-ew-open", size=20, color="black"),
+        marker=dict(symbol="line-ew-open", size=20, color="white"),
         name="Tordifferenz"
     ))
     fig_relative_goals.update_layout(
         barmode="relative",
-        xaxis_title="Team",
-        yaxis_title="Tore",
+        xaxis_title=None,
+        yaxis_title="Tordifferenz",
         margin=dict(l=0, r=0, t=10, b=10),
         showlegend=False,
         xaxis_tickangle=80
