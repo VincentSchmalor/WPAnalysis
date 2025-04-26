@@ -192,8 +192,35 @@ def assign_data_types_score_board(df):
 
     return df
 
+def cleanse_team_names(df):
+    def split_team_name(text):
+        if not isinstance(text, str):
+            return text, ''
+        match = re.match(r'(.*?)( - dir\..*)?$', text)
+        if match:
+            first_part = match.group(1).strip()
+            second_part = match.group(2).strip() if match.group(2) else ''
+            return first_part, second_part
+        else:
+            return text, ''
+
+    split_cols = df["Team"].apply(split_team_name)
+    df["Team"] = split_cols.apply(lambda x: x[0])
+    df["Direkter_Vergleich"] = split_cols.apply(lambda x: x[1])
+
+    return df
+
+def split_goals_score_board(df):
+    goals = df["Tore"].str.extract(r"(?P<Tore_Gemacht>\d+)\s*[:]\s*(?P<Tore_Bekommen>\d+)")
+    df["Tore_Gemacht"] = pd.to_numeric(goals["Tore_Gemacht"], errors="coerce")
+    df["Tore_Bekommen"] = pd.to_numeric(goals["Tore_Bekommen"], errors="coerce")
+    
+    return df
+
 def extend_score_board(df):
     df = split_played_games(df)
+    df = cleanse_team_names(df)
     df = assign_data_types_score_board(df)
+    df = split_goals_score_board(df)
 
     return df

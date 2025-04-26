@@ -6,6 +6,8 @@ import pandas as pd
 import datetime
 import data.data_handler as data_handler
 import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 df_game_plan, df_team_plans, df_team_stats, df_score_board = data_handler.get_second_league()
 last_update = datetime.datetime.now()
@@ -50,7 +52,7 @@ app.layout = dmc.MantineProvider(
             html.Br(),
 
             # Scoreboard
-            html.H4("Tabelle"),
+            #html.H4("Tabelle"),
             dash_table.DataTable(
                 id="scoreboard",
                 columns=[
@@ -65,26 +67,20 @@ app.layout = dmc.MantineProvider(
                 style_cell={"textAlign": "center", "minWidth": "100px", "whiteSpace": "normal"}
             ),
 
-            # Stacked Bar Chart
-            html.H4("Spielausgänge pro Team"),
-            dcc.Graph(id="stacked-bar-chart"),
+            # Combined Graph
+            dcc.Graph(id="stacked-games-graph"),
+            dcc.Graph(id="relative-goals-graph"),
 
             html.Br(),
 
             # Gameplan
-            html.H4("Spieleübersicht"),
+            #html.H4("Spieleübersicht"),
             dash_table.DataTable(
                 id="gameplan",
                 style_table={"overflowX": "auto", "width": "100%"},
                 style_cell={"textAlign": "center", "minWidth": "100px", "whiteSpace": "normal"}
             )
-        ], style={
-            "paddingLeft": "0",
-            "paddingRight": "0",
-            "marginLeft": "0",
-            "marginRight": "0",
-            "width": "100%"
-        })
+        ])
     ]
 )
 
@@ -93,7 +89,8 @@ app.layout = dmc.MantineProvider(
      Output("gameplan", "columns"),
      Output("gameplan", "data"),
      Output("gameplan", "style_data_conditional"),
-     Output("stacked-bar-chart", "figure")], 
+     Output("stacked-games-graph", "figure"),
+     Output("relative-goals-graph", "figure")],
     Input("team-dropdown", "value")
 )
 def update_dashboard(team):
@@ -124,10 +121,7 @@ def update_dashboard(team):
             {"name": "Datum", "id": "Datum_Uhrzeit"},
             {"name": "Heim", "id": "Heim"},
             {"name": "Gast", "id": "Gast"},
-            {"name": "Ergebnis", "id": "Ergebnis"},
-            #{"name": "Ergebnis_Typ", "id": "Ergebnis_Typ"},
-            #{"name": "Spielort", "id": "Spielort"},
-            #{"name": "Status", "id": "Status"}
+            {"name": "Ergebnis", "id": "Ergebnis"}
         ]
 
     game_plan_style_data = [
@@ -161,27 +155,64 @@ def update_dashboard(team):
             }
         ]
 
-    fig = px.bar(
-        df_score_board,
-        x="Team",
-        y=["Siege", "Niederlagen", "Offen"],
-        title="Spielausgänge pro Team",
-        labels={"value": "Anzahl Spiele", "variable": "Ergebnis"},
+    df_score_board[["Tore_Gemacht", "Tore_Bekommen", "Tordifferenz"]] = df_score_board[["Tore_Gemacht", "Tore_Bekommen", "Tordifferenz"]].apply(pd.to_numeric, errors="coerce")
+    df_score_board.fillna(0, inplace=True)
+
+    # Stacked Games Chart
+    fig_stacked_games = go.Figure()
+    for outcome, color in zip(["Siege", "Niederlagen", "Offen"], ["#28a745", "#dc3545", "#6c757d"]):
+        fig_stacked_games.add_trace(
+            go.Bar(
+                x=df_score_board["Team"],
+                y=df_score_board[outcome],
+                name=outcome,
+                marker_color=color,
+                text=df_score_board[outcome],
+                textposition="inside"
+            )
+        )
+    fig_stacked_games.update_layout(
         barmode="stack",
-        text_auto="total",
-        color_discrete_map={
-            "Siege": "#28a745",        # Grün
-            "Niederlagen": "#dc3545",  # Rot
-            "Offen": "#6c757d"         # Grau
-        }
-    )
-    fig.update_layout(
-    xaxis_title=None,
-    yaxis_title=None,
-    legend=dict(visible=False)
+        xaxis_title=None,
+        yaxis_title="Spielegebnisse",
+        margin=dict(l=0, r=0, t=10, b=10),
+        showlegend=False
     )
 
-    return table_style_data, table_format, games_data, game_plan_style_data, fig
+    # Relative Goals Chart
+    fig_relative_goals = go.Figure()
+    fig_relative_goals.add_trace(go.Bar(
+        x=df_score_board["Team"],
+        y=-df_score_board["Tore_Bekommen"],
+        name="Tore Bekommen",
+        marker_color="#dc3545",
+        text=-df_score_board["Tore_Bekommen"],
+        textposition="inside"
+    ))
+    fig_relative_goals.add_trace(go.Bar(
+        x=df_score_board["Team"],
+        y=df_score_board["Tore_Gemacht"],
+        name="Tore Gemacht",
+        marker_color="#28a745",
+        text=df_score_board["Tore_Gemacht"],
+        textposition="inside"
+    ))
+    fig_relative_goals.add_trace(go.Scatter(
+        x=df_score_board["Team"],
+        y=df_score_board["Tordifferenz"],
+        mode="markers",
+        marker=dict(symbol="line-ew-open", size=20, color="black"),
+        name="Tordifferenz"
+    ))
+    fig_relative_goals.update_layout(
+        barmode="relative",
+        xaxis_title="Team",
+        yaxis_title="Tore",
+        margin=dict(l=0, r=0, t=10, b=10),
+        showlegend=False
+    )
+
+    return table_style_data, table_format, games_data, game_plan_style_data, fig_stacked_games, fig_relative_goals
 
 @app.callback(
     Output("update-info", "children"),
