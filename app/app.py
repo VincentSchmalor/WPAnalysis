@@ -176,7 +176,8 @@ def update_dashboard(team):
         xaxis_title=None,
         yaxis_title="Spielegebnisse",
         margin=dict(l=0, r=0, t=10, b=10),
-        showlegend=False
+        showlegend=False,
+        xaxis_tickangle=80
     )
 
     # Relative Goals Chart
@@ -200,7 +201,9 @@ def update_dashboard(team):
     fig_relative_goals.add_trace(go.Scatter(
         x=df_score_board["Team"],
         y=df_score_board["Tordifferenz"],
-        mode="markers",
+        mode="markers+text",
+        text=df_score_board["Tordifferenz"],
+        textposition="middle right",
         marker=dict(symbol="line-ew-open", size=20, color="black"),
         name="Tordifferenz"
     ))
@@ -209,7 +212,8 @@ def update_dashboard(team):
         xaxis_title="Team",
         yaxis_title="Tore",
         margin=dict(l=0, r=0, t=10, b=10),
-        showlegend=False
+        showlegend=False,
+        xaxis_tickangle=80
     )
 
     return table_style_data, table_format, games_data, game_plan_style_data, fig_stacked_games, fig_relative_goals
