@@ -5,6 +5,7 @@ import dash_mantine_components as dmc
 import pandas as pd
 import datetime
 import data.data_handler as data_handler
+import plotly.express as px
 
 df_game_plan, df_team_plans, df_team_stats, df_score_board = data_handler.get_second_league()
 last_update = datetime.datetime.now()
@@ -52,11 +53,22 @@ app.layout = dmc.MantineProvider(
             html.H4("Tabelle"),
             dash_table.DataTable(
                 id="scoreboard",
-                columns=[{"name": i, "id": i} for i in df_score_board.columns],
+                columns=[
+                    {"name": "#", "id": "Platzierung"},
+                    {"name": "Team", "id": "Team"},
+                    {"name": "Punkte", "id": "Punkte"},
+                    {"name": "Tore", "id": "Tore"},
+                    {"name": "Tordifferenz", "id": "Tordifferenz"}
+                ],
                 data=df_score_board.to_dict("records"),
                 style_table={"overflowX": "auto", "width": "100%"},
                 style_cell={"textAlign": "center", "minWidth": "100px", "whiteSpace": "normal"}
             ),
+
+            # Stacked Bar Chart
+            html.H4("Spielausgänge pro Team"),
+            dcc.Graph(id="stacked-bar-chart"),
+
             html.Br(),
 
             # Gameplan
@@ -74,7 +86,8 @@ app.layout = dmc.MantineProvider(
     [Output("scoreboard", "style_data_conditional"),
      Output("gameplan", "columns"),
      Output("gameplan", "data"),
-     Output("gameplan", "style_data_conditional")], 
+     Output("gameplan", "style_data_conditional"),
+     Output("stacked-bar-chart", "figure")], 
     Input("team-dropdown", "value")
 )
 def update_dashboard(team):
@@ -142,7 +155,23 @@ def update_dashboard(team):
             }
         ]
 
-    return table_style_data, table_format, games_data, game_plan_style_data
+    fig = px.bar(
+        df_score_board,
+        x="Team",
+        y=["Siege", "Niederlagen", "Offen"],
+        title="Spielausgänge pro Team",
+        labels={"value": "Anzahl Spiele", "variable": "Ergebnis"},
+        barmode="stack",
+        text_auto="total",
+        color_discrete_map={
+            "Siege": "#28a745",        # Grün
+            "Niederlagen": "#dc3545",  # Rot
+            "Offen": "#6c757d"         # Grau
+        }
+    )
+    fig.update_layout(xaxis_title="Team", yaxis_title="Anzahl Spiele", legend_title="Ergebnis")
+
+    return table_style_data, table_format, games_data, game_plan_style_data, fig
 
 @app.callback(
     Output("update-info", "children"),

@@ -177,3 +177,23 @@ def create_team_stats(df_team_plans):
         stats_list.append(stats)
 
     return pd.DataFrame(stats_list)
+
+def split_played_games(df):
+    played_games = df["Spiele"].str.extract(r"(?P<Gespielt>\d+)\s*[/]\s*(?P<Gesamt>\d+)")
+    df["Gespielt"] = pd.to_numeric(played_games["Gespielt"], errors="coerce")
+    df["Gesamt"] = pd.to_numeric(played_games["Gesamt"], errors="coerce")
+    df["Offen"] = df["Gesamt"] - df["Gespielt"]
+
+    return df
+
+def assign_data_types_score_board(df):
+    df["Siege"] = pd.to_numeric(df["Siege"])
+    df["Niederlagen"] = pd.to_numeric(df["Niederlagen"])
+
+    return df
+
+def extend_score_board(df):
+    df = split_played_games(df)
+    df = assign_data_types_score_board(df)
+
+    return df

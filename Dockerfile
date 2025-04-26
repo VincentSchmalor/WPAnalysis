@@ -3,7 +3,7 @@ WORKDIR /app
 
 # Optional: Falls requirements.txt existiert
 COPY requirements.txt /app/
-RUN pip install --no-cache-dir -r requirements.txt || true
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Kopiere den gesamten Inhalt des aktuellen Verzeichnisses in das Container-Verzeichnis
 COPY . /app/
