@@ -78,7 +78,13 @@ app.layout = dmc.MantineProvider(
                 style_table={"overflowX": "auto", "width": "100%"},
                 style_cell={"textAlign": "center", "minWidth": "100px", "whiteSpace": "normal"}
             )
-        ])
+        ], style={
+            "paddingLeft": "0",
+            "paddingRight": "0",
+            "marginLeft": "0",
+            "marginRight": "0",
+            "width": "100%"
+        })
     ]
 )
 
