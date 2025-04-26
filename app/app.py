@@ -1,13 +1,11 @@
 # app.py
 
-from dash import Dash, html, dash_table, dcc, Input, Output, callback_context
+from dash import Dash, html, dash_table, dcc, ctx, Input, Output, callback_context
 import dash_mantine_components as dmc
 import pandas as pd
 import datetime
 import data.data_handler as data_handler
-import plotly.express as px
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 
 df_game_plan, df_team_plans, df_team_stats, df_score_board = data_handler.get_second_league()
 last_update = datetime.datetime.now()
@@ -21,32 +19,34 @@ app.layout = dmc.MantineProvider(
             html.H2("Wasserball Team Dashboard"),
 
             # Update Button and last update info
-            html.Div(
-                [
-                    dmc.Button("Daten aktualisieren", id="update-button", variant="light", color="blue"),
-                    html.Div(
-                        id="update-info",
-                        children=f"Letzte Aktualisierung: {last_update.strftime('%d.%m.%Y %H:%M:%S')}",
-                        style={"whiteSpace": "nowrap"}
-                    )
-                ],
-                style={
-                    "display": "flex",
-                    "justifyContent": "space-between",
-                    "alignItems": "center",
-                    "gap": "10px",
-                    "flexWrap": "nowrap"
-                }
-            ),
-
-            # Dropdown for team selection
-            html.Div(
-                dcc.Dropdown(
-                    id="team-dropdown",
-                    options=[{"label": team, "value": team} for team in df_team_stats["Team"].sort_values()],
-                    placeholder="Team auswählen"
+            html.Div([
+                dmc.Button(
+                    "Daten aktualisieren",
+                    id="update-button",
+                    variant="light",
+                    color="blue",
+                    disabled=False
                 ),
-                style={"marginTop": "15px"}
+                html.Span(id="update-icon", style={"marginLeft": "10px", "fontSize": "20px"}),
+                html.Div(
+                    id="update-info",
+                    children=f"Stand: {last_update.strftime('%d.%m.%Y %H:%M:%S')}",
+                    style={"whiteSpace": "nowrap"}
+                )
+            ],
+            style={
+                "display": "flex",
+                "justifyContent": "space-between",
+                "alignItems": "center",
+                "gap": "10px",
+                "flexWrap": "nowrap"
+            }),
+
+            dcc.Interval(
+                id="interval-component",
+                interval=5*60*1000,  # alle 5 Minuten (in Millisekunden)
+                n_intervals=0,
+                disabled=False
             ),
 
             html.Br(),
@@ -62,7 +62,9 @@ app.layout = dmc.MantineProvider(
                 ],
                 data=df_score_board.to_dict("records"),
                 style_table={"overflowX": "auto", "width": "100%"},
-                style_cell={"textAlign": "center", "minWidth": "100px", "whiteSpace": "normal"}
+                style_cell={"textAlign": "center", "minWidth": "100px", "whiteSpace": "normal"},
+                row_selectable="single",
+                selected_rows=[]
             ),
 
             # Combined Graph
@@ -83,15 +85,37 @@ app.layout = dmc.MantineProvider(
 )
 
 @app.callback(
+    [Output("update-button", "disabled"),
+     Output("update-icon", "children"),
+     Output("interval-component", "disabled")],
+    [Input("update-info", "children"),
+     Input("interval-component", "n_intervals")]
+)
+def disable_update_button(_, n_intervals):
+    now = datetime.datetime.now()
+    diff = (now - last_update).total_seconds()
+    if diff < 290:
+        return True, "🕒", False  # Button deaktiviert, Uhr anzeigen, Intervall läuft weiter
+    else:
+        return False, "", True  # Button aktiv, Uhr weg, Intervall abschalten
+
+@app.callback(
     [Output("scoreboard", "style_data_conditional"),
      Output("gameplan", "columns"),
      Output("gameplan", "data"),
      Output("gameplan", "style_data_conditional"),
      Output("stacked-games-graph", "figure"),
      Output("relative-goals-graph", "figure")],
-    Input("team-dropdown", "value")
+    [Input("scoreboard", "selected_rows"),
+     Input("scoreboard", "data")]
 )
-def update_dashboard(team):
+def update_dashboard(selected_rows, data):
+    if selected_rows:
+        selected_index = selected_rows[0]
+        team = data[selected_index]["Team"]
+    else:
+        team = None
+
     if team:
         table_style_data = [
             {
@@ -202,6 +226,7 @@ def update_dashboard(team):
         mode="markers+text",
         text=df_score_board["Tordifferenz"],
         textposition="top center",
+        textfont=dict(color="white"),
         marker=dict(symbol="line-ew-open", size=20, color="white"),
         name="Tordifferenz"
     ))
@@ -226,14 +251,14 @@ def update_info(n_clicks, _):
     ctx = callback_context
     if not ctx.triggered:
         # Initial call, just show timestamp
-        return f"Letzte Aktualisierung: {last_update.strftime('%d.%m.%Y %H:%M:%S')}"
+        return f"Stand: {last_update.strftime('%d.%m.%Y %H:%M:%S')}"
     trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
     if trigger_id == "update-button":
         df_game_plan, df_team_plans, df_team_stats, df_tabelle = data_handler.get_second_league()
         last_update = datetime.datetime.now()
-        return f"Letzte Aktualisierung: {last_update.strftime('%d.%m.%Y %H:%M:%S')}"
+        return f"Stand: {last_update.strftime('%d.%m.%Y %H:%M:%S')}"
     # Otherwise, just return the current timestamp
-    return f"Letzte Aktualisierung: {last_update.strftime('%d.%m.%Y %H:%M:%S')}"
+    return f"Stand: {last_update.strftime('%d.%m.%Y %H:%M:%S')}"
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8050, debug=True)
