@@ -14,7 +14,7 @@ def clean_text(df):
              .replace("\u00a0", " ") # Non-breaking space
              .replace("\n", " ") #Line breaks
         )
-    df = df.applymap(clean_cell)
+    df = df.map(clean_cell)
 
     return df
 
