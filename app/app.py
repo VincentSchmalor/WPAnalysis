@@ -58,9 +58,7 @@ app.layout = dmc.MantineProvider(
                 columns=[
                     {"name": "#", "id": "Platzierung"},
                     {"name": "Team", "id": "Team"},
-                    {"name": "Punkte", "id": "Punkte"},
-                    {"name": "Tore", "id": "Tore"},
-                    {"name": "Tordifferenz", "id": "Tordifferenz"}
+                    {"name": "Punkte", "id": "Punkte"}
                 ],
                 data=df_score_board.to_dict("records"),
                 style_table={"overflowX": "auto", "width": "100%"},

@@ -11,5 +11,10 @@ COPY . /app/
 # Setze den PYTHONPATH, damit Python den Ordner /app als Modul-Verzeichnis erkennt
 ENV PYTHONPATH=/app
 
+# Zeitzone setzen
+ENV TZ=Europe/Berlin
+RUN apt-get update && apt-get install -y tzdata && \
+    ln -snf /usr/share/zoneinfo/Europe/Berlin /etc/localtime && echo "Europe/Berlin" > /etc/timezone
+
 # Starte die Anwendung
 CMD ["python", "app/app.py"]
